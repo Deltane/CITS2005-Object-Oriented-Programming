@@ -3,7 +3,7 @@ package studentstats;
 import itertools.Itertools;
 
 import studentapi.*;
-
+import  itertools.DoubleEndedIterator;
 import java.util.Iterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -73,7 +73,8 @@ public class StudentStats {
      * @return An iterator over the students who have taken `unit`, from newest to oldest.
      */
     public static Iterator<Student> unitNewestStudents(StudentList list, String unit) {
-        // TASK(9): Implement unitNewestStudents
-        return null;
+        DoubleEndedIterator<Student> studentIterator = new StudentListIterator(list);
+        Iterator<Student> filteredIterator = Itertools.filter(studentIterator, student -> student.getMark(unit) != null);
+        return Itertools.reversed((DoubleEndedIterator<Student>) filteredIterator);
     }
 }

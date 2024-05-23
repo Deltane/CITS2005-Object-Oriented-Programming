@@ -1,54 +1,79 @@
 package studentstats;
 
 import itertools.DoubleEndedIterator;
-
 import studentapi.*;
 
-/**
- * A (double ended) iterator over student records pulled from the student API.
- *
- * <p>This does not load the whole student list immediately, but rather queries the API ({@link
- * StudentList#getPage}) only as needed.
- */
-public class StudentListIterator implements DoubleEndedIterator<Student> {
-    // TASK(8): Implement StudentListIterator: Add any fields you require
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.NoSuchElementException;
 
-    /**
-     * Construct an iterator over the given {@link StudentList} with the specified retry quota.
-     *
-     * @param list The API interface.
-     * @param retries The number of times to retry a query after getting {@link
-     *     QueryTimedOutException} before declaring the API unreachable and throwing an {@link
-     *     ApiUnreachableException}.
-     */
+public class StudentListIterator implements DoubleEndedIterator<Student> {
+    private StudentList list;
+    private int retries;
+    private List<Student> currentPage;
+    private int currentIndex;
+    private int currentPageNumber;
+
     public StudentListIterator(StudentList list, int retries) {
-        // TASK(8): Implement StudentListIterator
+        this.list = list;
+        this.retries = retries;
+        this.currentPage = new ArrayList<>();
+        this.currentIndex = 0;
+        this.currentPageNumber = 0;
     }
 
-    /**
-     * Construct an iterator over the given {@link StudentList} with a default retry quota of 3.
-     *
-     * @param list The API interface.
-     */
     public StudentListIterator(StudentList list) {
-        // TASK(8): Implement StudentListIterator
+        this(list, 3);
+    }
+
+    private void loadPage(int pageNumber, boolean reverse) {
+        int attempts = 0;
+        while (attempts < retries) {
+            try {
+                currentPage = new ArrayList<>(List.of(list.getPage(pageNumber)));
+                if (reverse) {
+                    Collections.reverse(currentPage);
+                }
+                currentIndex = reverse ? currentPage.size() - 1 : 0;
+                currentPageNumber = pageNumber;
+                return;
+            } catch (QueryTimedOutException e) {
+                attempts++;
+            }
+        }
+        throw new ApiUnreachableException();
     }
 
     @Override
     public boolean hasNext() {
-        // TASK(8): Implement StudentListIterator
+        if (currentIndex < currentPage.size()) {
+            return true;
+        }
+        if (currentPageNumber + 1 < list.getNumPages()) {
+            loadPage(currentPageNumber + 1, false);
+            return true;
+        }
         return false;
     }
 
     @Override
     public Student next() {
-        // TASK(8): Implement StudentListIterator
-        return null;
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
+        return currentPage.get(currentIndex++);
     }
 
     @Override
     public Student reverseNext() {
-        // TASK(8): Implement StudentListIterator
-        return null;
+        if (currentIndex > 0) {
+            return currentPage.get(--currentIndex);
+        }
+        if (currentPageNumber > 0) {
+            loadPage(currentPageNumber - 1, true);
+            return currentPage.get(--currentIndex);
+        }
+        throw new NoSuchElementException();
     }
 }
