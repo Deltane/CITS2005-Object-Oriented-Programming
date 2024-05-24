@@ -18,18 +18,20 @@ import studentapi.*;
  */
 public class StudentListIterator implements DoubleEndedIterator<Student> {
 
-    private StudentList list;
+    private final StudentList list;
 
     // current element index within a certain page
     private int currentIndex;
     private int currentPageIndex;
     private List<Student> currentPage;
-    private int retries;
-
+    private final int retries;
     // keep track of the elements that are already visited
-    private Set<Integer> visitedEleIndices;
+    private final Set<Integer> visitedElementIndices;
     // keep track of the pages that are already visited
-    private Set<Integer> visitedPageIndices;
+    private final Set<Integer> visitedPageIndices;
+    //made retries final
+    //made visitedElementIndices final
+    //made visitedPageIndices final and works as expected
 
     /**
      * Construct an iterator over the given {@link StudentList} with the
@@ -46,7 +48,7 @@ public class StudentListIterator implements DoubleEndedIterator<Student> {
         this.currentPageIndex = 0;
         this.currentPage = new ArrayList<>();
         this.retries = retries;
-        this.visitedEleIndices = new HashSet<>();
+        this.visitedElementIndices = new HashSet<>();
         this.visitedPageIndices = new HashSet<>();
         loadPage(currentPageIndex);
     }
@@ -67,7 +69,7 @@ public class StudentListIterator implements DoubleEndedIterator<Student> {
             try {
                 currentPage = Arrays.asList(list.getPage(pageNum));
                 currentIndex = 0;
-                visitedEleIndices.clear();  // Clear visited indices for new page
+                visitedElementIndices.clear();  // Clear visited indices for new page
                 return;
             } catch (QueryTimedOutException e) {
                 attempts++;
@@ -82,49 +84,31 @@ public class StudentListIterator implements DoubleEndedIterator<Student> {
          * return true if one of the following is true: 1. current page is not
          * finished 2. there is another page to go
          */
-        return visitedEleIndices.size() < currentPage.size() || visitedPageIndices.size() < list.getNumPages();
+        return visitedElementIndices.size() < currentPage.size() || visitedPageIndices.size() < list.getNumPages();
     }
 
     @Override
     public Student next() {
-        /**
-         * If visitedPageIndices.size() >= list.getNumPages(), throw
-         * NoSuchElementException(), otherwise, continue if currentPageIndex is
-         * in visitedPageIndices, move to next page. else, if currentIndex is in
-         * visitedEleIndices, currentIndex move forward (in a circular manner)
-         * if currentIndex is not in visitedEleIndices, return current element,
-         * add currentIndex to visitedEleIndices, currentIndex move forward
-         */
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        // while current page has been finished
+        // move to the next unvisited page if the current one is exhausted
         while (visitedPageIndices.contains(currentPageIndex)) {
-            // move forward to the next page in a circular manner
             currentPageIndex = (currentPageIndex + 1) % list.getNumPages();
             loadPage(currentPageIndex);
         }
-        // while current element has been finished
-        while (visitedEleIndices.contains(currentIndex)) {
-            // move forward to the next element in a circular manner
+        // skip already visited elements on the current page
+        while (visitedElementIndices.contains(currentIndex)) {
             currentIndex = (currentIndex + 1) % currentPage.size();
         }
-
-        // once found an unvisited element, do the following:
-        // mark current element as visited
-        visitedEleIndices.add(currentIndex);
-
-        // if all the elements are visited within current page
-        if (visitedEleIndices.size() >= currentPage.size()) {
-            // mark current page as visited
+        // mark the current element as visited
+        visitedElementIndices.add(currentIndex);
+        if (visitedElementIndices.size() >= currentPage.size()) {
             visitedPageIndices.add(currentPageIndex);
         }
-
-        // note the current element
+        // return the current student and advance to the next one
         Student student = currentPage.get(currentIndex);
-        // move forward within current page in a circular manner
         currentIndex = (currentIndex + 1) % currentPage.size();
-
         return student;
     }
 
@@ -133,34 +117,28 @@ public class StudentListIterator implements DoubleEndedIterator<Student> {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        // while current page has been finished
+        // navigate through pages if the current page is completely visited
         while (visitedPageIndices.contains(currentPageIndex)) {
-            // move forward to the next page in a circular manner
             currentPageIndex = (currentPageIndex + 1) % list.getNumPages();
             loadPage(currentPageIndex);
         }
-        // set the current index backwards by 1
+        // adjust index to check the previous element
         currentIndex = (currentIndex - 1 + currentPage.size()) % currentPage.size();
 
-        // while current element has been finished
-        while (visitedEleIndices.contains(currentIndex)) {
-            // move backward to the next element in a circular manner
+        // check previous elements in the circular manner
+        while (visitedElementIndices.contains(currentIndex)) {
             currentIndex = (currentIndex - 1 + currentPage.size()) % currentPage.size();
         }
 
-        // once found an unvisited element, do the following:
-        // mark current element as visited
-        visitedEleIndices.add(currentIndex);
+        // mark this element as visited once identified
+        visitedElementIndices.add(currentIndex);
 
-        // if all the elements are visited within current page
-        if (visitedEleIndices.size() >= currentPage.size()) {
-            // mark current page as visited
+        // if all elements on this page are visited, mark the page
+        if (visitedElementIndices.size() >= currentPage.size()) {
             visitedPageIndices.add(currentPageIndex);
         }
-
-        // note the current element
-        Student student = currentPage.get(currentIndex);
-
-        return student;
+        // return the student at the current index
+        return currentPage.get(currentIndex);
     }
+
 }

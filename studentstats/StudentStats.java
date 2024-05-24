@@ -75,9 +75,10 @@ public class StudentStats {
     // TASK(9): Implement unitNewestStudents: tried couldn't fix page indices returned double ended iterator in time
     //passes some tests 24/5
     //class mismatch exception??
+    //made new filtered double ended iterator method in itertools
     public static Iterator<Student> unitNewestStudents(StudentList list, String unit) {
         DoubleEndedIterator<Student> studentIterator = new StudentListIterator(list);
-        Iterator<Student> filteredIterator = Itertools.filter(studentIterator, student -> student.getMark(unit) != null);
-        return Itertools.reversed((DoubleEndedIterator<Student>) filteredIterator);
+        DoubleEndedIterator<Student> filteredIterator = Itertools.filterDoubleEnded(studentIterator, student -> student.getMark(unit) != null);
+        return Itertools.reversed(filteredIterator);
     }
 }

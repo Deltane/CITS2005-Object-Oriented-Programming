@@ -294,4 +294,68 @@ public class Itertools {
         return result; // give back the reduced result after going through all elements
     }
     //tests passed 7/7 done 18/5 do task 8/9
+    public static <T> DoubleEndedIterator<T> filterDoubleEnded(DoubleEndedIterator<T> it, Predicate<T> pred) {
+        return new DoubleEndedIterator<T>() {
+            private T nextValid = null;
+            private T prevValid = null;
+            private boolean nextReady = false;
+            private boolean prevReady = false;
+
+            private void findNext() {
+                while (!nextReady && it.hasNext()) {
+                    T temp = it.next();
+                    if (pred.test(temp)) {
+                        nextValid = temp;
+                        nextReady = true;
+                        break;
+                    }
+                }
+            }
+
+            private void findPrevious() {
+                while (!prevReady && ((Iterator<T>) it).hasNext()) {  // Assuming reverse iteration uses the same hasNext() logic
+                    T temp = it.reverseNext();
+                    if (pred.test(temp)) {
+                        prevValid = temp;
+                        prevReady = true;
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public boolean hasNext() {
+                if (!nextReady) findNext();
+                return nextReady;
+            }
+
+            @Override
+            public T next() {
+                if (!nextReady) {
+                    findNext();
+                    if (!nextReady) {
+                        throw new NoSuchElementException();
+                    }
+                }
+                T result = nextValid;
+                nextReady = false; // Reset to enforce the next findNext call
+                return result;
+            }
+
+            @Override
+            public T reverseNext() throws NoSuchElementException {
+                if (!prevReady) {
+                    findPrevious();
+                    if (!prevReady) {
+                        throw new NoSuchElementException("No more elements available in reverse direction.");
+                    }
+                }
+                T result = prevValid;
+                prevReady = false; // Reset to enforce the next findPrevious call
+                return result;
+            }
+        };
+    }
+
+
 }
