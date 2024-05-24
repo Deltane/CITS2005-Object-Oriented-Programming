@@ -72,6 +72,9 @@ public class StudentStats {
      * @param unit The unit code.
      * @return An iterator over the students who have taken `unit`, from newest to oldest.
      */
+    // TASK(9): Implement unitNewestStudents: tried couldn't fix page indices returned double ended iterator in time
+    //passes some tests 24/5
+    //class mismatch exception??
     public static Iterator<Student> unitNewestStudents(StudentList list, String unit) {
         DoubleEndedIterator<Student> studentIterator = new StudentListIterator(list);
         Iterator<Student> filteredIterator = Itertools.filter(studentIterator, student -> student.getMark(unit) != null);
