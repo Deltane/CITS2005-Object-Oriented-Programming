@@ -3,7 +3,7 @@ package studentstats;
 import itertools.Itertools;
 
 import studentapi.*;
-import  itertools.DoubleEndedIterator;
+import itertools.DoubleEndedIterator;
 import java.util.Iterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
