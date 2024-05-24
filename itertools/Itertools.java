@@ -6,6 +6,9 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+//progress updated on git repo clone via git
+//https://github.com/Deltane/CITS2005.git
+
 /**
  * A collection of useful methods for working with iterators.
  *
@@ -287,7 +290,6 @@ public class Itertools {
             // apply the function to the current result and the element, and update the result
             result = f.apply(result, element); // combine the current result with the current element
         }
-
         // after processing all elements, return the final result of the reduction
         return result; // give back the reduced result after going through all elements
     }
